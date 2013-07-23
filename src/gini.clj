@@ -10,7 +10,7 @@
     (cond
      (empty? s) nil
      (empty? r) f
-     :else (loop [last-of-head (* 1N (last f))
+     :else (loop [last-of-head (last f)
                   head f
                   tail r]
              (if (empty? tail)
@@ -19,7 +19,6 @@
                  (recur l
                         (conj head l)
                         (next tail))))))))
-
 
 
 
