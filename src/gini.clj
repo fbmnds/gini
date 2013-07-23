@@ -1,10 +1,29 @@
 (ns gini)
 
 
+;; approx. in O(n)
+;;
+(defn cum-fn-finite [v cfn]
+  (let [s (seq v)
+        f (vector (first s))
+        r (rest s)]
+    (cond
+     (empty? s) nil
+     (empty? r) f
+     :else (loop [last-of-head (* 1N (last f))
+                  head f
+                  tail r]
+             (if (empty? tail)
+               head
+               (let [l (cfn last-of-head (first tail))]
+                 (recur l
+                        (conj head l)
+                        (next tail))))))))
 
 
 
-;; close to O(n)
+
+;; approx. in O(n)
 ;;
 (defn cum-sum-finite [v]
   (let [s (seq v)
