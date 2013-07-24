@@ -1,6 +1,41 @@
 (ns gini)
 
 
+(defmacro pure-time
+  "Like clojure.core/time, returns the time as a value
+   instead of a string."
+  [expr]
+  `(let [start# (. System (nanoTime))]
+     (do
+       (prn ~expr)
+       (/ (double (- (. System (nanoTime)) start#)) 1000000.0))))
+
+
+
+
+(defn cum-fn
+  ([s cfn]
+     (cond (empty? s) nil
+           (empty? (rest s)) (list (first s))
+           :else (lazy-seq (cons (first s) (cum-fn (first s) (rest s) cfn)))))
+  ([x s cfn]
+     (cond (empty? s) nil
+           (empty? (rest s)) (list (cfn x (first s)))
+           :else (lazy-seq (cons (cfn x (first s)) (cum-fn (cfn x (first s)) (rest s) cfn))))))
+
+
+
+(comment
+
+user> (class (repeat 1))
+clojure.lang.LazySeq
+user> (ancestors (class (repeat 1)))
+#{java.lang.Iterable clojure.lang.IObj clojure.lang.ISeq java.util.List java.lang.Object java.io.Serializable java.util.Collection clojure.lang.Obj clojure.lang.IMeta clojure.lang.IPending clojure.lang.IHashEq clojure.lang.Seqable clojure.lang.IPersistentCollection clojure.lang.Sequential}
+
+)
+
+
+
 ;; approx. in O(n)
 ;;
 (defn cum-fn-finite [v cfn]
