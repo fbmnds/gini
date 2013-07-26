@@ -167,19 +167,64 @@ user> (time (last (cum-sum-finite (vec (range 100000)))))
 
 
 
-(use '(incanter core stats charts))
+(use '(incanter core charts))
+
+(declare lorenz-curve)
+
+(defn lorenz-curve-x
+  [x & {:keys [order title x-label y-label legend]
+        :or {order >
+             title "Lorenz Curve"
+             x-label "% of cumulated observations"
+             y-label "% of population"
+             legend true}}]
+  (if (= order >)
+    (lorenz-curve x (repeat (count x) 1)
+                  :order >
+                  :title title
+                  :x-label x-label
+                  :y-label y-label
+                  :legend legend)
+    (lorenz-curve (repeat (count x) 1) x
+                  :order <
+                  :title title
+                  :x-label y-label
+                  :y-label x-label
+                  :legend legend)))
 
 
 (defn lorenz-curve
-  [obs & {:keys [title x-label y-label legend]
-          :or {title "Lorenz Curve"
-               x-label "% of population"
-               y-label "% of cumulated observations"
+  ([x y & {:keys [order title x-label y-label legend]
+           :or {order >
+                title "Lorenz Curve"
+                x-label "% of cumulated x-observations"
+                y-label "% of cumulated y-observations"
+                legend true}}]
+     (let [cum+-x (cum-fn (sort order x) +)
+           x (conj (map #(/ % (last cum+-x)) cum+-x) 0)  ; could throw Div0-Exception
+           cum+-y (cum-fn (sort order y) +)
+           y (conj (map #(/ % (last cum+-y)) cum+-y) 0)] ; could throw Div0-Exception
+       (doto
+           (xy-plot x y
+                    :title title
+                    :x-label x-label
+                    :y-label y-label
+                    :legend legend)
+         (add-lines y y)
+         view))))
+
+
+(defn lorenz-curve
+  [obs & {:keys [order title x-label y-label legend]
+          :or {order >
+               title "Lorenz Curve"
+               x-label "% of cumulated observations"
+               y-label "% of population"
                legend true}}]
   (cond
    (< (count obs) 2) nil
    :else
-   (let [obs (sort > obs)
+   (let [obs (sort order obs)
          count-obs (count obs)
          y (conj (map #(/ % count-obs) (range 1 (inc count-obs))) 0)
          cum+-obs (cum-fn obs +)
@@ -187,8 +232,20 @@ user> (time (last (cum-sum-finite (vec (range 100000)))))
      (doto
          (xy-plot x y
                   :title title
-                  :y-label x-label
-                  :x-label y-label
+                  :x-label x-label
+                  :y-label y-label
                   :legend legend)
        (add-lines y y)
        view))))
+
+
+
+(defn test-parms
+  [x & y {:keys [order title x-label y-label legend]
+          :or {order >
+               title "Lorenz Curve"
+               x-label "% of cumulated observations"
+               y-label "% of population"
+               legend true}}]
+  (cond (symbol? y) (print "x :keys")
+        :else (print "x y :keys")))
