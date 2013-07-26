@@ -12,7 +12,8 @@
 
 
 
-
+;; in O(n) on lazy-seqs
+;;
 (defn cum-fn
   ([s cfn]
      (cond (empty? s) nil
@@ -22,17 +23,6 @@
      (cond (empty? s) nil
            (empty? (rest s)) (list (cfn x (first s)))
            :else (lazy-seq (cons (cfn x (first s)) (cum-fn (cfn x (first s)) (rest s) cfn))))))
-
-
-
-(comment
-
-user> (class (repeat 1))
-clojure.lang.LazySeq
-user> (ancestors (class (repeat 1)))
-#{java.lang.Iterable clojure.lang.IObj clojure.lang.ISeq java.util.List java.lang.Object java.io.Serializable java.util.Collection clojure.lang.Obj clojure.lang.IMeta clojure.lang.IPending clojure.lang.IHashEq clojure.lang.Seqable clojure.lang.IPersistentCollection clojure.lang.Sequential}
-
-)
 
 
 
@@ -177,14 +167,23 @@ user> (time (last (cum-sum-finite (vec (range 100000)))))
 
 
 
-(defn gini-plot
+(use '(incanter core stats charts))
+
+(defn lorenz-curve
   [obs]
   (cond
-   (not (seq? obs)) nil
    (< (count obs) 2) nil
    :else
-   (let [count-of-obs (count obs)
-         cum-count-of-obs (range 1 (inc count-of-obs))
-         sum-of-obs (reduce + obs)
-         obs (sort > obs)
-         cum-sum-of-obs (cum-sum obs)])))
+   (let [obs (sort > obs)
+         count-obs (count obs)
+         y (conj (map #(/ % count-obs) (range 1 (inc count-obs))) 0)
+         cum+-obs (cum-fn obs +)
+         x (conj (map #(/ % (last cum+-obs)) cum+-obs) 0)] ; could throw Div0-Exception
+     (doto
+         (xy-plot x y
+                  :title "Lorenz Curve"
+                  :y-label "% of population"
+                  :x-label "% of cumulated observations"
+                  :legend true)
+       (add-lines y y)
+       view))))
