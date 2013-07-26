@@ -169,8 +169,13 @@ user> (time (last (cum-sum-finite (vec (range 100000)))))
 
 (use '(incanter core stats charts))
 
+
 (defn lorenz-curve
-  [obs]
+  [obs & {:keys [title x-label y-label legend]
+          :or {title "Lorenz Curve"
+               x-label "% of population"
+               y-label "% of cumulated observations"
+               legend true}}]
   (cond
    (< (count obs) 2) nil
    :else
@@ -181,9 +186,9 @@ user> (time (last (cum-sum-finite (vec (range 100000)))))
          x (conj (map #(/ % (last cum+-obs)) cum+-obs) 0)] ; could throw Div0-Exception
      (doto
          (xy-plot x y
-                  :title "Lorenz Curve"
-                  :y-label "% of population"
-                  :x-label "% of cumulated observations"
-                  :legend true)
+                  :title title
+                  :y-label x-label
+                  :x-label y-label
+                  :legend legend)
        (add-lines y y)
        view))))
