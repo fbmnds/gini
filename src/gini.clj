@@ -1,15 +1,7 @@
-(ns gini)
+(ns gini
+  (:use (incanter core charts)))
 
-
-(defmacro pure-time
-  "Like clojure.core/time, returns the time as a value
-   instead of a string."
-  [expr]
-  `(let [start# (. System (nanoTime))]
-     (do
-       (prn ~expr)
-       (/ (double (- (. System (nanoTime)) start#)) 1000000.0))))
-
+; (use '(incanter core charts))
 
 
 ;; in O(n) on lazy-seqs
@@ -27,20 +19,32 @@
 ;; (cum-fn [[0 1] [2 9]] (fn [x y] [(+ (x 0) (y 0)) (+ (x 1) (y 1))]))
 
 
-
-
-(use '(incanter core charts))
-
-
-
-
-(sort-by first > [[1 2] [0 9]])
-(sort-by second > [[1 2] [0 9]]))
+; (sort-by first > [[1 2] [0 9]])
+; (sort-by second > [[1 2] [0 9]]))
 
 ; [0.0224 0.0276 0.0402 0.0498 0.06 0.09 0.11 0.15 0.19 0.26]
 ; [1 1 1 1 1 1 1 1 1 1]
 
 ; (take 100 (repeatedly #(rand-int 42)))
+
+(defn- set-xy
+  ([x]
+     (set-xy x (repeat (inc (count x)) 1)))
+  ([x y]
+     (map vector x y)))
+
+
+(defn- x-y [xy & {:keys [order order-pos]
+                  :or {order >
+                       order-pos first}}]
+  (let [xy (sort-by order-pos order xy)
+        cum+-xy (vec (cum-fn xy (fn [x y] [(+ (x 0) (y 0)) (+ (x 1) (y 1))])))
+        fn-x-y (fn [xy] [(vec (map first xy)) (vec (map second xy))])]
+    (fn-x-y (conj
+             (map (fn [[x y]] [(* (/ x ((last cum+-xy) 0)) 100.0)
+                              (* (/ y ((last cum+-xy) 1)) 100.0)]) cum+-xy)
+             [0 0]))))
+
 
 (defn lorenz-curve
   ([xy & {:keys [order order-pos title x-label y-label legend]
@@ -50,36 +54,30 @@
                x-label "% of cumulated x-observations"
                y-label "% of cumulated y-observations"
                legend true}}]
-     (cond (number? (first xy)) (lorenz-curve (map vector xy (repeat (inc (count xy)) 1))
-                                              :order order
-                                              :order-pos order-pos
-                                              :title title
-                                              :x-label "% of cumulated observations"
-                                              :y-label "% of population"
-                                              :legend legend)
-           (vector? (first xy))
-           (let [xy (sort-by order-pos order xy)
-                 cum+-xy (vec (cum-fn xy (fn [x y] [(+ (x 0) (y 0)) (+ (x 1) (y 1))])))
-                 x-y (fn [xy] [(vec (map first xy)) (vec (map second xy))])
-                 [x y] (x-y (conj
-                             (map (fn [[x y]] [(* (/ x ((last cum+-xy) 0)) 100.0)
-                                              (* (/ y ((last cum+-xy) 1)) 100.0)]) cum+-xy)
-                             [0 0]))]
-             (do (println "x " x)
-                 (println "y "y)
-                 (println "xy " xy)
-                 (println "cum+-xy " cum+-xy)
-             (doto
-                 (xy-plot x y
-                          :title title
-                          :x-label x-label
-                          :y-label y-label
-                          :legend legend)
-               (add-lines y y)
-               view)))
-           :else
-           (throw (Exception.
-                   "wrong input type: must be seq of numbers or of number tuples")))))
+     (cond
+      (number? (first xy))
+      (lorenz-curve (set-xy xy)
+                    :order order
+                    :order-pos order-pos
+                    :title title
+                    :x-label "% of cumulated observations"
+                    :y-label "% of population"
+                    :legend legend)
+
+      (vector? (first xy))
+      (let [[x y] (x-y xy)]
+        (doto
+            (xy-plot x y
+                     :title title
+                     :x-label x-label
+                     :y-label y-label
+                     :legend legend)
+          (add-lines y y)
+          view)))
+
+     :else
+     (throw (IllegalArgumentException.
+             "Input xy must be seq of numbers or of number tuples"))))
 
 
 
@@ -89,7 +87,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+(comment
 
 (declare lorenz-curve)
 
@@ -135,7 +133,7 @@
          (add-lines y y)
          view))))
 
-
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -143,7 +141,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+(comment
 
 
 (defn lorenz-curve
@@ -171,7 +169,7 @@
        view))))
 
 
-
+)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -180,7 +178,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+(comment
 
 ;; approx. in O(n)
 ;;
@@ -258,7 +256,6 @@
 (defn cum-sum-finite [v]
   (reduce (fn [v x] (conj v (+ (last v) x))) (vector (first v)) (rest v)))
 
-(comment
 
 user> (cum-sum-finite [1 2 3 4 5 6])
 [1 3 6 10 15 21]
@@ -278,7 +275,6 @@ user> (time (last (cum-sum-finite (vec (range 100000)))))
 "Elapsed time: 571564.274941 msecs"
 4999950000
 
-  )
 
 
 
@@ -320,3 +316,5 @@ user> (time (last (cum-sum-finite (vec (range 100000)))))
                         acc (+ acc head)]
                     (lazy-seq (cons acc (rec-cum-sum acc tail))))))]
         (lazy-seq (cons head (rec-cum-sum head tail))))))
+
+)
