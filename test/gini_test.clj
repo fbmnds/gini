@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [gini :refer :all]))
 
+(set! *print-length* 10)
 
 (defmacro pure-time
   "Like clojure.core/time, returns the time as a value
@@ -12,6 +13,17 @@
        (prn ~expr)
        (/ (double (- (. System (nanoTime)) start#)) 1000000.0))))
 
+(defn perf? [tn]
+  (let [[t100 t1000 t10000 t100000] tn]
+    (and (< (/ t100000 t10000) 13)
+         (< (/ t10000 t1000) 13)
+         (< (/ t1000 t100) 13))))
+
+(def tn [100 1000 10000 100000])
+
+
+(defn- cum-fn-perf [n]
+  (pure-time (last (cum-fn (range n) +))))
 
 (deftest cum-fn-test
   (testing "testing cum-fn"
@@ -23,18 +35,18 @@
            [[0 1] [2 10]]))
     (is (= (cum-fn [[0 1] [2 9] [-2 -10]] (fn [x y] [(+ (x 0) (y 0)) (+ (x 1) (y 1))]))
            [[0 1] [2 10] [0 0]]))
-    (let [t100 (pure-time (last (cum-fn (range 100) +)))
-          t1000 (pure-time (last (cum-fn (range 1000) +)))
-          t10000 (pure-time (last (cum-fn (range 10000) +)))
-          t100000 (pure-time (last (cum-fn (range 100000) +)))]
-      (is (and (< (/ t100000 t10000) 13)
-               (< (/ t10000 t1000) 13)
-               (< (/ t1000 t100) 13))))
+    (is (perf? (map cum-fn-perf tn)))
     ))
+
 
 ; testing private fn:
 ; @#'some-ns/some-private-var
 ; https://groups.google.com/d/msg/clojure/mJqplAdt3TY/q2Ur5j0OmTcJ
+
+(defn- set-xy-perf [n]
+  (pure-time (last
+              (@#'gini/set-xy (vec (take n (repeatedly #(rand-int 42))))
+                              (vec (take n (repeatedly #(rand-int 42))))))))
 
 (deftest set-xy-test
   (testing "testing set-xy"
@@ -46,7 +58,33 @@
       (is (= (@#'gini/set-xy x y))
           '([0.0224 0] [0.0276 1] [0.0402 1] [0.0498 1] [0.06 1]
               [0.09 1] [0.11 1] [0.15 1] [0.19 1] [0.26 10])))
+    (is (perf? (map set-xy-perf tn)))
     ))
+
+
+
+(def test-set-xy (@#'gini/set-xy (vec (take 100000 (repeatedly #(rand-int 42))))
+                                 (vec (take 100000 (repeatedly #(rand-int 42))))))
+
+(defn- split-xy-perf [n]
+  (pure-time (last
+              (@#'gini/split-xy (take n test-set-xy)))))
+
+(deftest split-xy-test
+  (testing "testing split-xy"
+    (is (perf? (map split-xy-perf tn)))))
+
+
+
+(def test-cum+-xy (vec (@#'gini/cum-fn (sort-by first > test-set-xy) @#'gini/vec+)))
+
+(defn- norm-xy-perf [n]
+  (pure-time (last
+              (@#'gini/norm-xy (take n test-cum+-xy)))))
+
+(deftest norm-xy-test
+  (testing "testing norm-xy"
+    (is (perf? (map norm-xy-perf tn)))))
 
 
 
@@ -57,7 +95,7 @@
   (map #(map (fn [x] (format "%.2f" (float x))) %) zz))
 
 (deftest x-y-test
-  (testing "testing set-xy"
+  (testing "testing x-y"
     (let [xy-1 '([0.0224 1] [0.0276 1] [0.0402 1] [0.0498 1] [0.06 1]
                    [0.09 1] [0.11 1] [0.15 1] [0.19 1] [0.26 1])
           xy-2 '([0.0224 0] [0.0276 1] [0.0402 1] [0.0498 1] [0.06 1]

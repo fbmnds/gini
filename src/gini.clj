@@ -47,7 +47,6 @@
     (split-xy (conj (norm-xy cum+-xy) [0 0]))))
 
 
-
 (defn lorenz-curve
   ([xy & {:keys [order order-pos title x-label y-label legend]
           :or {order >
