@@ -2,6 +2,7 @@
   (:use (incanter core charts)))
 
 ; (use '(incanter core charts))
+; (require 'clojure.inspector)
 
 
 ;; in O(n) on lazy-seqs
@@ -22,8 +23,6 @@
 ; (sort-by first > [[1 2] [0 9]])
 ; (sort-by second > [[1 2] [0 9]]))
 
-; [0.0224 0.0276 0.0402 0.0498 0.06 0.09 0.11 0.15 0.19 0.26]
-; [1 1 1 1 1 1 1 1 1 1]
 
 ; (take 100 (repeatedly #(rand-int 42)))
 
@@ -37,8 +36,11 @@
 (defn- x-y [xy & {:keys [order order-pos]
                   :or {order >
                        order-pos first}}]
-  (let [xy (sort-by order-pos order xy)
-        cum+-xy (vec (cum-fn xy (fn [x y] [(+ (x 0) (y 0)) (+ (x 1) (y 1))])))
+  (let [;_ (clojure.inspector/inspect order-by)
+        xy2 (sort-by order-pos order xy)
+        ;_ (clojure.inspector/inspect xy2)
+        cum+-xy (vec (cum-fn xy2 (fn [x y] [(+ (x 0) (y 0)) (+ (x 1) (y 1))])))
+        ;_ (clojure.inspector/inspect cum+-xy)
         fn-x-y (fn [xy] [(vec (map first xy)) (vec (map second xy))])]
     (fn-x-y (conj
              (map (fn [[x y]] [(* (/ x ((last cum+-xy) 0)) 100.0)
