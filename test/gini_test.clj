@@ -159,10 +159,28 @@
                      21.28 31.91 44.68 59.57 78.72 100.00))))
        (fact (perf? (map gini-x-y-perf tn)) => truthy))
 
+(def x (take 1000 (iterate inc 1)))
+(def y0 (map #(Math/pow % 0.3333) x))
+(def y1 (map #(Math/sqrt %) x))
+;(def y2 (map #(* % 1.1) x))
+;(def y3 (map #(* % 1.05) x))
+(def y4 x)
+(def y5 (map #(Math/pow % 2) x))
+(def y6 (map #(Math/pow % 3) x))
+
 
 
 (facts "gini-coeff"
-       (fact (gini-coeff (repeat 10 1)) => 0))
+       (fact (gini-coeff (repeat 10 1)) => 0.0)
+       (fact (format-x (gini-coeff x) 3) => 0.333)
+       (fact (format-x (gini-coeff y0) 3) => 0.143)
+       (fact (format-x (gini-coeff y1) 3) => 0.2)
+       ;(fact (format-x (gini-coeff y2) 3) => 0.273)
+       ;(fact (format-x (gini-coeff y3) 3) => 0.302)
+       (fact (format-x (gini-coeff y4) 3) => 0.333)
+       (fact (format-x (gini-coeff y5) 3) => 0.5)
+       (fact (format-x (gini-coeff y6) 3) => 0.6)
+       )
 
 
 ;; restore settings

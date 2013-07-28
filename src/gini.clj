@@ -70,7 +70,9 @@
   ([x]
      (gini-coeff x (repeat (count x) 1)))
   ([x y]
-     0))
+     (let [v (map (partial partition 2 1) (gini-x-y (set-xy x y)))]
+       (- 1.0 (reduce + (map s (set-xy (first v) (second v))))))))
+
 
 ;; (def t (repeat 10 1))
 ;; (def u (gini-x-y (set-xy t)))
