@@ -15,6 +15,22 @@
   (java.util.Locale/setDefault en_US))
 
 
+
+;; depends on en_US for format consistency
+;;
+(defn- format-x [x n]
+  (read-string (format (clojure.string/join ["%." (str n) "f"]) (java.math.BigDecimal. x))))
+
+;; TODO: make it work
+;;
+(defn- round-zz [zz n]
+  (map #(map (fn [x] (with-precision n x)) %) zz))
+
+(defn- format-zz [zz n]
+  (map #(map (fn [x] (format-x x n)) %) zz))
+
+
+
 (defmacro pure-time
   "Like clojure.core/time, returns the time as a value
    instead of a string."
@@ -34,7 +50,8 @@
                  (< (/ t10000 t1000) theta)
                  (< (/ t1000 t100) theta))]
     (if-not res
-      (println "\n- observed times:\n  ---------------\n " tn)
+      (println "\n- observed times:\n  ---------------\n "
+               (map #(format-x % 4) tn))
       true)))
 
 
@@ -95,21 +112,12 @@
   (vec (@#'gini/cum-fn (sort-by first > test-set-xy) @#'gini/vec+)))
 
 (defn- norm-xy-perf [n]
-  (pure-time (take 5
-              (@#'gini/norm-xy (take n test-cum+-xy)))))
+  (pure-time (format-zz
+              (take 5 (@#'gini/norm-xy (take n test-cum+-xy))) 4)))
 
 (fact "norm-xy"
       (perf? (map norm-xy-perf tn)) => truthy)
 
-
-(defn- round-zz [zz n]
-  (map #(map (fn [x] (with-precision n (float x))) %) zz))
-
-(defn- format-x [x n]
-  (read-string (format (clojure.string/join ["%." (str n) "f"]) (float x))))
-
-(defn- format-zz [zz n]
-  (map #(map (fn [x] (format-x x n)) %) zz))
 
 
 (defn- x-y-perf [n]
