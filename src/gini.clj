@@ -19,7 +19,7 @@
 
 
 
-(defn- set-xy
+(defn set-xy
   ([x]
      (set-xy x (repeat (inc (count x)) 1)))
   ([x y]
@@ -34,17 +34,22 @@
   [(+ (x 0) (y 0)) (+ (x 1) (y 1))])
 
 
-(defn- norm-xy [cum+-xy]
-  (let [max-cum+-xy (last cum+-xy)]
-    (map (fn [[x y]] [(* (/ x (max-cum+-xy 0)) 100.0)
-                     (* (/ y (max-cum+-xy 1)) 100.0)]) cum+-xy)))
+(defn- norm-xy [xy]
+  (let [max-xy (last xy)]
+    (map (fn [[x y]] [(* (/ x (max-xy 0)) 100.0)
+                     (* (/ y (max-xy 1)) 100.0)]) xy)))
 
 
-(defn- x-y [xy & {:keys [order order-pos]
+(defn gini-xy [xy & {:keys [order order-pos]
+                     :or {order >
+                          order-pos first}}]
+  (conj (norm-xy (cum-fn (sort-by order-pos order xy) vec+)) [0 0]))
+
+
+(defn gini-x-y [xy & {:keys [order order-pos]
                   :or {order >
                        order-pos first}}]
-  (let [cum+-xy (vec (cum-fn (sort-by order-pos order xy) vec+))]
-    (split-xy (conj (norm-xy cum+-xy) [0 0]))))
+  (split-xy (gini-xy xy :order order :order-pos order-pos)))
 
 
 (defn lorenz-curve
@@ -66,7 +71,7 @@
                     :legend legend)
 
       (vector? (first xy))
-      (let [[x y] (x-y xy)]
+      (let [[x y] (gini-x-y xy)]
         (doto
             (xy-plot x y
                      :title title
@@ -78,4 +83,4 @@
 
      :else
      (throw (IllegalArgumentException.
-             "Input xy must be seq of numbers or of number tuples"))))
+             "Input xy must be seq of numbers or of pairs of numbers"))))

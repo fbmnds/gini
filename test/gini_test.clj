@@ -120,42 +120,44 @@
 
 
 
-(defn- x-y-perf [n]
-  (pure-time (format-zz (take 2 (@#'gini/x-y (take n test-set-xy))) 2)))
+;; gini-xy tested implicitely via gini-x-y
+;;
+(defn- gini-x-y-perf [n]
+  (pure-time (format-zz (take 2 (@#'gini/gini-x-y (take n test-set-xy))) 4)))
 
-(facts "x-y"
+(facts "gini-x-y"
        (let [xy-1 '([0.0224 1] [0.0276 1] [0.0402 1] [0.0498 1] [0.06 1]
                       [0.09 1] [0.11 1] [0.15 1] [0.19 1] [0.26 1])
              xy-2 '([0.0224 0] [0.0276 1] [0.0402 1] [0.0498 1] [0.06 1]
                       [0.09 1] [0.11 1] [0.15 1] [0.19 1] [0.26 10])
              xy-3 [[0.0224 0] [0.0276 1] [0.0402 2] [0.0498 3] [0.06 7]
                    [0.09 6] [0.11 5] [0.15 4] [0.19 9] [0.4 10]]]
-         (fact (format-zz (@#'gini/x-y xy-1) 2)
+         (fact (format-zz (@#'gini/gini-x-y xy-1) 2)
                => '((0.00 26.00 45.00 60.00 71.00
                      80.00 86.00 90.98 95.00 97.76 100.00)
                     (0.00 10.00 20.00 30.00 40.00
                      50.00 60.00 70.00 80.00 90.00 100.00)))
-         (fact (format-zz (@#'gini/x-y xy-2) 2)
+         (fact (format-zz (@#'gini/gini-x-y xy-2) 2)
                => '((0.00 26.00 45.00 60.00 71.00
                      80.00 86.00 90.98 95.00 97.76 100.00)
                     (0.00 55.56 61.11 66.67 72.22
                      77.78 83.33 88.89 94.44 100.00 100.00)))
-         (fact (format-zz (@#'gini/x-y xy-3) 2)
+         (fact (format-zz (@#'gini/gini-x-y xy-3) 2)
                => '((0.00 35.09 51.75 64.91 74.56
                      82.46 87.72 92.09 95.61 98.04 100.00)
                     (0.00 21.28 40.43 48.94 59.57
                      72.34 87.23 93.62 97.87 100.00 100.00)))
-         (fact (format-zz (@#'gini/x-y xy-3 :order-pos second) 2)
+         (fact (format-zz (@#'gini/gini-x-y xy-3 :order-pos second) 2)
                => '((0.00 35.09 51.75 57.02 64.91
                      74.56 87.72 92.09 95.61 98.04 100.00)
                     (0.00 21.28 40.43 55.32 68.09
                      78.72 87.23 93.62 97.87 100.00 100.00)))
-         (fact (format-zz (@#'gini/x-y xy-3 :order < :order-pos second) 2)
+         (fact (format-zz (@#'gini/gini-x-y xy-3 :order < :order-pos second) 2)
                => '((0.00 1.96 4.39 7.91 12.28
                      25.44 35.09 42.98 48.25 64.91 100.00)
                     (0.00 0.00 2.13 6.38 12.77
                      21.28 31.91 44.68 59.57 78.72 100.00))))
-       (fact (perf? (map x-y-perf tn)) => truthy))
+       (fact (perf? (map gini-x-y-perf tn)) => truthy))
 
 
 
