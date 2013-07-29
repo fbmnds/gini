@@ -162,21 +162,25 @@
 (def x (take 1000 (iterate inc 1)))
 (def y0 (map #(Math/pow % 0.3333) x))
 (def y1 (map #(Math/sqrt %) x))
-;(def y2 (map #(* % 1.1) x))
-;(def y3 (map #(* % 1.05) x))
+(def max-x (reduce max x))
+(def y2 (map #(+ % (* max-x 0.1)) x))
+(def y3 (map #(+ % (* max-x 0.05)) x))
 (def y4 x)
 (def y5 (map #(Math/pow % 2) x))
 (def y6 (map #(Math/pow % 3) x))
 
+(defn- <eps? [x y eps]
+  (< (/ (Math/abs (- x y)) (+ x y)) eps))
 
-
+;; https://en.wikipedia.org/wiki/Gini_coefficient
+;; Gini coefficients of representative income distributions
+;;
 (facts "gini-coeff"
        (fact (gini-coeff (repeat 10 1)) => 0.0)
-       (fact (format-x (gini-coeff x) 3) => 0.333)
-       (fact (format-x (gini-coeff y0) 3) => 0.143)
+       (fact (<eps? (gini-coeff y0) 0.143 0.02) => truthy)
        (fact (format-x (gini-coeff y1) 3) => 0.2)
-       ;(fact (format-x (gini-coeff y2) 3) => 0.273)
-       ;(fact (format-x (gini-coeff y3) 3) => 0.302)
+       (fact (<eps? (gini-coeff y2) 0.273 0.02) => truthy)
+       (fact (<eps? (gini-coeff y3) 0.302 0.02) => truthy)
        (fact (format-x (gini-coeff y4) 3) => 0.333)
        (fact (format-x (gini-coeff y5) 3) => 0.5)
        (fact (format-x (gini-coeff y6) 3) => 0.6)
