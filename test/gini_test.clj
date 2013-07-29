@@ -33,7 +33,7 @@
 
 (defmacro pure-time
   "Like clojure.core/time, returns the time as a value
-   instead of a string."
+   instead of a string./Leon Grapenthin."
   [expr]
   `(let [start# (. System (nanoTime))]
      (do
