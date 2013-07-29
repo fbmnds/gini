@@ -2,7 +2,7 @@
   (:use (incanter core charts)))
 
 ; (use '(incanter core charts))
-; (require 'clojure.inspector)
+(require 'clojure.inspector)
 
 
 ;; in O(n) on lazy-seqs
@@ -108,8 +108,8 @@
                      :y-label y-label
                      :legend legend)
           (add-lines y y)
-          view)))
+          view))
 
      :else
      (throw (IllegalArgumentException.
-             "Input xy must be seq of numbers or of pairs of numbers"))))
+             "Input xy must be seq of numbers or of pairs of numbers")))))

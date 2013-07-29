@@ -21,13 +21,13 @@
 (defn- format-x [x n]
   (read-string (format (clojure.string/join ["%." (str n) "f"]) (java.math.BigDecimal. x))))
 
-;; TODO: make it work
+(defn- format-zz [zz n]
+  (map #(map (fn [x] (format-x x n)) %) zz))
+
+;; TODO: understand with-precision
 ;;
 (defn- round-zz [zz n]
   (map #(map (fn [x] (with-precision n x)) %) zz))
-
-(defn- format-zz [zz n]
-  (map #(map (fn [x] (format-x x n)) %) zz))
 
 
 
@@ -159,6 +159,10 @@
                      21.28 31.91 44.68 59.57 78.72 100.00))))
        (fact (perf? (map gini-x-y-perf tn)) => truthy))
 
+
+;; https://en.wikipedia.org/wiki/Gini_coefficient
+;; Gini coefficients of representative income distributions
+;;
 (def x (take 1000 (iterate inc 1)))
 (def y0 (map #(Math/pow % 0.3333) x))
 (def y1 (map #(Math/sqrt %) x))
@@ -172,9 +176,6 @@
 (defn- <eps? [x y eps]
   (< (/ (Math/abs (- x y)) (+ x y)) eps))
 
-;; https://en.wikipedia.org/wiki/Gini_coefficient
-;; Gini coefficients of representative income distributions
-;;
 (facts "gini-coeff"
        (fact (gini-coeff (repeat 10 1)) => 0.0)
        (fact (<eps? (gini-coeff y0) 0.143 0.02) => truthy)
@@ -185,6 +186,19 @@
        (fact (format-x (gini-coeff y5) 3) => 0.5)
        (fact (format-x (gini-coeff y6) 3) => 0.6)
        )
+
+(def wait-timeout 3000)
+
+(fact (format "graphics (wait timeout %.1fs)"
+              (/ wait-timeout 1000.))
+  (lorenz-curve y0) => truthy
+  (lorenz-curve y1) => truthy
+  (lorenz-curve y2) => truthy
+  (lorenz-curve y3) => truthy
+  (lorenz-curve y4) => truthy
+  (lorenz-curve y5) => truthy
+  (lorenz-curve y6) => truthy
+  (Thread/sleep wait-timeout))
 
 
 ;; restore settings
