@@ -1,5 +1,6 @@
 (ns gini-test
-  (:use midje.sweet)
+  (:use midje.sweet
+        (incanter core charts))
   (:require [gini :refer :all]))
 
 ;; save settings
@@ -187,18 +188,17 @@
        (fact (format-x (gini-coeff y6) 3) => 0.6)
        )
 
-(def wait-timeout 3000)
 
-(fact (format "graphics (wait timeout %.1fs)"
-              (/ wait-timeout 1000.))
-  (lorenz-curve y0) => truthy
-  (lorenz-curve y1) => truthy
-  (lorenz-curve y2) => truthy
-  (lorenz-curve y3) => truthy
-  (lorenz-curve y4) => truthy
-  (lorenz-curve y5) => truthy
-  (lorenz-curve y6) => truthy
-  (Thread/sleep wait-timeout))
+
+(save (lorenz-curve y0) "lc-y0.png")
+(save (lorenz-curve y1) "lc-y1.png")
+(save (lorenz-curve y2) "lc-y2.png")
+(save (lorenz-curve y3) "lc-y3.png")
+(save (lorenz-curve y4) "lc-y4.png")
+(save (lorenz-curve y5) "lc-y5.png")
+(save (lorenz-curve y6) "lc-y6.png")
+
+
 
 
 ;; restore settings

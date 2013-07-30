@@ -2,7 +2,7 @@
   (:use (incanter core charts)))
 
 ; (use '(incanter core charts))
-(require 'clojure.inspector)
+; (require 'clojure.inspector)
 
 
 ;; in O(n) on lazy-seqs
