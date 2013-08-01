@@ -5,6 +5,8 @@
 ; (require 'clojure.inspector)
 
 
+;; re-invention of clojure.core/reductions
+;; (ref´ed by A. Stoddard)
 ;; in O(n) on lazy-seqs
 ;;
 (defn cum-fn
@@ -45,7 +47,7 @@
 (defn gini-xy [xy & {:keys [order order-pos]
                      :or {order >
                           order-pos first}}]
-  (conj (norm-xy (cum-fn (sort-by order-pos order xy) vec+)) [0 0]))
+  (conj (norm-xy (reductions vec+ (sort-by order-pos order xy))) [0 0]))
 
 
 (defn gini-x-y [xy & {:keys [order order-pos]
